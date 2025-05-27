@@ -1,4 +1,4 @@
-process CN_READS_SUMMARY {
+process reformat_taxonomy {
 
 /*
     @author: Poppy J Hesketh Best

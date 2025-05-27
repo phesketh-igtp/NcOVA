@@ -13,39 +13,40 @@ process sylph_read_taxonomy {
         v2.0.0-2025-05-27: updated to use Sylph instead of Kraken2, and added support for empty controls
 */
     
-    tag "${sampleID}"
-
     conda params.conda_taxonomy
 
     publishDir "${params.outDir}/${params.runID}/sylph/", mode: 'copy'
 
     input:
-        tuple val(sampleID), 
-            path(forward), 
-            path(reverse)
+        val(runID)
+        file(samplesheet)
 
     output:
-        file("merged_abundance_file.tsv"),   emit: sylph_merged_res
+    tuple file("sylph_bacterial-merged_abundance_file.tsv"), 
+        file("sylph_bacterial-merged_abundance_file.tsv"),   emit: sylph_merged_res
 
     script:
 
         """
         mkdir -p sylph_results/
+
+        while read sampleID R1 R2; do
+
+            echo "Processing sample: \${sampleID}"
+            ln -s fastq/\${R1} \${sampleID}_R1.fastq.gz
+            ln -s fastq/\${R2} \${sampleID}_R2.fastq.gz
+        
+        done < ${samplesheet}; do
         
         # Bacterial taxonomy
         sylph profile ${params.bacteria_sylph_db} \\
-            -1 *{r,R}1*.fastq.gz -2 *{r,R}2*.fastq.gz \\
+            -1 *R1*.fastq.gz -2 *R2*.fastq.gz \\
             > bacteria.tsv
 
         # Viral taxonomy
         sylph profile ${params.viral_sylph_db} \\
             -1 *{r,R}1*.fastq.gz -2 *{r,R}2*.fastq.gz \\
             > viral.tsv
-
-        # Eukaryotic taxonomy
-        sylph profile ${params.eukaryotic_sylph_db} \\
-            -1 *{r,R}1*.fastq.gz -2 *{r,R}2*.fastq.gz \\
-            > fungal.tsv
 
         # Perform the taxonomic correction
         sylph-tax taxprof bacteria.tsv \\
@@ -56,27 +57,43 @@ process sylph_read_taxonomy {
             -t ${params.viral_sylph_db_id} \\
             -o sylph_results/vir-
 
-        sylph-tax taxprof fungal.tsv \\
-            -t ${params.eukaryotic_sylph_db_id} \\
-            -o sylph_results/fun-
-
         # Merge the results into a single file
-        sylph-tax merge sylph_results/bact-*.sylphmpa \\
-            --column relative_abundance \\
-            -o bact-merge_abundance_file.tsv
+                sylph-tax merge sylph/bact-*.sylphmpa \
+                    --column sequence_abundance \
+                    -o sylph_bact-merge_seq-abundance.tsv
 
-        sylph-tax merge sylph_results/vir-*.sylphmpa \\
-            --column relative_abundance \\
-            -o vir-merge_abundance_file.tsv
+                sylph-tax merge sylph/vir-*.sylphmpa \
+                    --column sequence_abundance \
+                    -o sylph_vir-merge_seq-abundance.tsv
 
-        sylph-tax merge sylph_results/fun-*.sylphmpa \\
-            --column relative_abundance \\
-            -o fun-merge_abundance_file.tsv
+        # Housekeeping of the results files
+        sed -i 's/_R1.fastq.gz//g' sylph_*-merge_seq-abundance.tsv
+        sed -i 's/_R2.fastq.gz//g' sylph_*-merge_seq-abundance.tsv
+        sed -i 's/|/;/g' sylph_*-merge_seq-abundance.tsv
 
-        cat bact-merge_abundance_file.tsv \
-            fun-merge_abundance_file.tsv \
-            vir-merge_abundance_file.tsv \
-            > merged_abundance_file.tsv
+        Rscript -e ""
+        library(tidyverse)
 
-    """
+        bact <- read_tsv("sylph_bact-merge_seq-abundance.tsv", col_names = TRUE) |>
+                        separate_wider_delim(clade_name, 
+                        names = c("domain", "phylum", "class", 
+                                "order", "family", "genome", 
+                                "species", "genome"), 
+                        delim = ';', too_few = 'align_start',
+                        too_many = 'debug', remove = TRUE) |> 
+                mutate(across(where(is.character), ~ na_if(gsub('^"|"$', '', .x), "")))
+        write_tsv(bact, "sylph_bact-merge_seq-abundance.final.tsv")
+
+        vir <- read_tsv("sylph_vir-merge_seq-abundance.tsv", col_names = TRUE)  |>
+                        separate_wider_delim(clade_name, 
+                        names = c("realm", "kingdom", "phylum", 
+                                "class", "order", "family", 
+                                "genus", "species", "genome"), 
+                        delim = ';', too_few = 'align_start',
+                        too_many = 'debug', remove = TRUE) |> 
+                mutate(across(where(is.character), ~ na_if(gsub('^"|"$', '', .x), "")))
+        write_tsv(vir, "sylph_viral-merge_seq-abundance.final.tsv")
+        "
+
+        """
 }
