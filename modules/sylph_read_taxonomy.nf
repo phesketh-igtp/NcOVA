@@ -13,7 +13,7 @@ process sylph_read_taxonomy {
         v2.0.0-2025-05-27: updated to use Sylph instead of Kraken2, and added support for empty controls
 */
     
-    conda params.conda_taxonomy
+    conda params.general_env
 
     publishDir "${params.outDir}/${params.runID}/sylph/", mode: 'copy'
 

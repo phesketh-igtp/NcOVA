@@ -19,7 +19,7 @@ process seqkit_stats {
 
     tag "${runID}"
 
-    conda params.taxonkit_env
+    conda params.general_env
         
     container { 
             if (workflow.containerEngine == 'singularity') return params.singularity_taxonkit

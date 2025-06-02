@@ -1,4 +1,4 @@
-name: taxonomy
+name: general
 channels:
   - conda-forge
   - bioconda
@@ -7,3 +7,4 @@ dependencies:
   - sylph
   - seqkit
   - sylph-tax
+  - ska
