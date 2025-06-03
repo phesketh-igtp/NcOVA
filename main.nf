@@ -2,9 +2,12 @@
 
 nextflow.enable.dsl = 2
 
-include { sylph_read_taxonomy   } from '../modules/sylph_read_taxonomy.nf'
-include { reformat_taxonomy     } from '../modules/reformat_taxonomy.nf'
-include { seqkit_stats          } from '../modules/seqkit_stats.nf'
+include { sylph_read_taxonomy   } from './modules/sylph_read_taxonomy.nf'
+include { seqkit_stats          } from './modules/seqkit_stats.nf'
+include { ska_reads_build       } from './modules/read_ska.nf'
+include { ska_distance          } from './modules/ska_distance.nf'
+include { merge_results         } from './modules/merge_results.nf'
+
 
 /* 
     Help Message
@@ -45,12 +48,10 @@ workflow {
     log.info """
     ${color_cyan}
     ════════════════════════════════════════════════════════════════════════
-        ██████╗ ██╗   ██╗████████╗██╗███████╗███████╗ ██████╗                 
-        ██╔══██╗██║   ██║╚══██╔══╝██║██╔════╝██╔════╝██╔═══██╗                
-        ██████╔╝██║   ██║   ██║   ██║███████╗█████╗  ██║   ██║                
-        ██╔══██╗██║   ██║   ██║   ██║╚════██║██╔══╝  ██║▄▄ ██║                
-        ██║  ██║╚██████╔╝   ██║   ██║███████║███████╗╚██████╔╝                
-        ╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚═╝╚══════╝╚══════╝ ╚══▀▀═╝                 
+        ▗▖  ▗▖      ▗▄▖ ▗▖  ▗▖ ▗▄▖ 
+        ▐▛▚▖▐▌ ▗▄▄▖▐▌ ▐▌▐▌  ▐▌▐▌ ▐▌
+        ▐▌ ▝▜▌▐▌   ▐▌ ▐▌▐▌  ▐▌▐▛▀▜▌
+        ▐▌  ▐▌▝▚▄▄▖▝▚▄▞▘ ▝▚▞▘ ▐▌ ▐▌                
         ${color_green}Pre-release development version${color_cyan}   
     ════════════════════════════════════════════════════════════════════════
         Negative cOntrol Validation Analysis ${params.version}
@@ -80,7 +81,7 @@ workflow {
                 --workflow [full, single, pairwise, summary, barcoding]
         */
 
-        if (params.samplesheet == null) { error "Please provide a samplesheet CSV file with --samplesheet (csv)"; helpMessage() }
+        if (params.samplesheet == null) { error "Please provide a samplesheet CSV file with --samplesheet (csv). The sample sheet but have the following headers - sampleID,forward_path,reverse_path,kingdom,index"; helpMessage() }
         if (params.runID == null) { error "Please provide a runID file with --runID (chr)"; helpMessage() }
         if (params.outDir == null) { error "Please provide a results/database directory for the RutiSeq db (location where new or past results will be) with --outDir (path)"; helpMessage() }
         if (params.workDir == null) { error "Please provide a work directory for the temporary intermediate files --workDir (path)"; helpMessage() }
@@ -99,7 +100,7 @@ workflow {
                 .ifEmpty { error "Sample sheet file '${params.samplesheet}' not found or empty" }
                 .splitCsv(header: true, sep: ',')
                 .map { row ->
-                    def requiredColumns = ['sampleID', 'forward_path', 'reverse_path', 'kingdom']
+                    def requiredColumns = ['sampleID', 'forward_path', 'reverse_path', 'kingdom', 'index']
                     def missingColumns = requiredColumns.findAll { !row.containsKey(it) }
                     if (missingColumns) {
                         error "Missing required column(s) in samplesheet: ${missingColumns.join(', ')}"
@@ -117,7 +118,8 @@ workflow {
                 tuple(row.sampleID.trim(), 
                     forwardFile, 
                     reverseFile, 
-                    row.kingdom.trim()
+                    row.kingdom.trim(),
+                    row.index.trim()
                     )
                 }
                 .branch {
@@ -191,23 +193,41 @@ workflow {
         */
 
         /*
-        Run Kraken2 on the reads and get read taxonomy
+        Run sylph on the reads and get read taxonomy
         */
 
             sylph_read_taxonomy( bacteria_merged )
             sylph_read_taxonomy( viral_merged )
             sylph_read_taxonomy( fungal_merged )
 
+            sylph_tax_res_merge = sylph_read_taxonomy.out.collect()
+
+        /*
+        Run SKA on the reads and get kmer profiles
+        */
+
+            ska_build_reads( params.samplesheet )
+            ska_distance( ska_merge.out.ska_build )
+            
+        /*
+        Merge results and produce internative HTML to show potential contamination
+        */
+
+            merge_results( ska_distance.out.ska_merged_res, 
+                            sylph_tax_res_merge )
+        */
+
+
 
 
 }
 
 /*
-    @author: Poppy J Hesketh Best
-    @date: 2025-04-04
-    @version: 1.0.0-beta
-    @description: 
-        This is the main workflow for the RutiSeq-nf pipeline. It is designed to be run with Nextflow and 
+author : Poppy J Hesketh Best
+date: 2025-04-04
+version: 1.0.0-beta
+description: 
+    This is the main workflow for the RutiSeq-nf pipeline. It is designed to be run with Nextflow and 
         takes a samplesheet as input. The workflow performs the following steps:
             - Update the TBProfiler database
             - Perform negative control analysis
@@ -215,7 +235,7 @@ workflow {
             - Perform pairwise sample analysis
             - Produce summary tables and visualisations
             - Perform barcoding analysis (optional-WIP)
-    @changelog
+changelog
         - 2024-11-01: Initial version
 */
 

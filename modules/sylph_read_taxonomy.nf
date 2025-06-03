@@ -94,6 +94,5 @@ process sylph_read_taxonomy {
                 mutate(across(where(is.character), ~ na_if(gsub('^"|"$', '', .x), "")))
         write_tsv(vir, "sylph_viral-merge_seq-abundance.final.tsv")
         "
-
         """
 }

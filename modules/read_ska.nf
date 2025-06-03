@@ -1,4 +1,4 @@
-process read_ska {
+process ska_reads_build {
 
 /*
     @author: Poppy J Hesketh Best
@@ -22,8 +22,7 @@ process read_ska {
         file(samplesheet)
 
     output:
-    tuple file("distances.txt"), 
-        file("lo_out"),   emit: ska_merged_res
+    tuple file("seqs.skf"), emit: ska_build
 
     script:
 
@@ -31,20 +30,22 @@ process read_ska {
         sed 's/,/\t/g' ${samplesheet} | \\
             cut -f2,3,4 > input_sequence.txt
 
+        line_count=$(wc -l < input_sequence.txt)
+
+        if [ "\$line_count" -le 19 ]; then threads=1
+            elif [ "\$line_count" -le 39 ]; then threads=2
+            elif [ "\$line_count" -le 79 ]; then threads=4
+            else threads=8
+        fi; echo "Using \$threads threads"
+
+        wc -l input_sequence.txt | \\
+            awk '{print \$1-1}' > num_samples.txt
+
         ska build -f input_sequence.txt \\
             --min-count 5 \\
             --min-qual 20 \\
             --qual-filter strict \\
-            --threads 10 \\
+            --threads \$threads \\
             -o seqs
-
-        ska lo seqs.skf lo_out
-
-        ska distance -o distances.txt seqs.skf
-
-        python scripts/cluster_dists.py \\
-            distances.txt \\
-            --snps 30 \\
-            --mismatches 0.05
         """
 }
