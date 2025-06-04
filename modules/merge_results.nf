@@ -1,14 +1,21 @@
 process merge_results {
 
+    conda params.general_env
+
+    publishDir "${params.outDir}/${params.runID}/results/", mode: 'copy'
+
     input:
-    tuple val(sample_id), path(results)
+        path(ska_distance)
+        path(sylph_taxonomy)
 
     output:
-    tuple val(sample_id), path("merged_results/${sample_id}.tsv")
+        path("${params.runID}_merged_plate_results.html"), emit: ska_merged_res
+        path("${params.runID}_merged_sylph_results.tsv"), emit: sylph_merged_res
 
     script:
     """
-    mkdir -p merged_results
-    cat ${results} > merged_results/${sample_id}.tsv
+    
+
+    exit 1
     """
 }

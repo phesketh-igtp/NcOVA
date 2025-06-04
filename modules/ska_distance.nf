@@ -18,7 +18,7 @@ process ska_distance {
     publishDir "${params.outDir}/${params.runID}/ska/", mode: 'copy'
 
     input:
-        file(ska_build)
+        path(ska_build)
 
     output:
         file("distances.txt"), emit: ska_distance

@@ -1,0 +1,8 @@
+name: mtbseq_env
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - conda-forge::python=3.10
+  - conda-forge::openjdk=8.0.412  # This specifies Java 1.8
+  - bioconda::mtbseq=1.1.0

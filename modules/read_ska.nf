@@ -18,8 +18,7 @@ process ska_reads_build {
     publishDir "${params.outDir}/${params.runID}/ska/", mode: 'copy'
 
     input:
-        val(runID)
-        file(samplesheet)
+        path(samplesheet)
 
     output:
     tuple file("seqs.skf"), emit: ska_build
