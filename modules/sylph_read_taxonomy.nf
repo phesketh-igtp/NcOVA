@@ -18,7 +18,6 @@ process sylph_read_taxonomy {
     publishDir "${params.outDir}/${params.runID}/sylph/", mode: 'copy'
 
     input:
-        val(runID)
         file(samplesheet)
 
     output:
