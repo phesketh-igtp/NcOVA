@@ -21,8 +21,8 @@ process ska_distance {
         path(ska_build)
 
     output:
-        file("distances.txt"), emit: ska_distance
-        file("clusters.txt"), emit: ska_clusters
+        path("distances.txt"), emit: ska_distance
+        path("clusters.txt"), emit: ska_clusters
 
     script:
 

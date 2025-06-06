@@ -21,7 +21,7 @@ process ska_reads_build {
         path(samplesheet)
 
     output:
-    tuple file("seqs.skf"), emit: ska_build
+        path("seqs.skf"), emit: ska_build
 
     script:
 
@@ -29,7 +29,7 @@ process ska_reads_build {
         sed 's/,/\t/g' ${samplesheet} | \\
             cut -f2,3,4 > input_sequence.txt
 
-        line_count=$(wc -l < input_sequence.txt)
+        line_count=\$(wc -l < input_sequence.txt)
 
         if [ "\$line_count" -le 19 ]; then threads=1
             elif [ "\$line_count" -le 39 ]; then threads=2

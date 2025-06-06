@@ -1,8 +1,7 @@
-include { sylph_read_taxonomy   } from '../modules/sylph_read_taxonomy.nf'
-include { seqkit_stats          } from '../modules/seqkit_stats.nf'
-include { ska_reads_build       } from '../modules/read_ska.nf'
-include { ska_distance          } from '../modules/ska_distance.nf'
-include { merge_results         } from '../modules/merge_results.nf'
+include { sylph_read_taxonomy   } from '../modules/contents_and_contam/sylph_read_taxonomy.nf'
+include { ska_reads_build       } from '../modules/contents_and_contam/read_ska.nf'
+include { ska_distance          } from '../modules/contents_and_contam/ska_distance.nf'
+include { merge_results         } from '../modules/contents_and_contam/merge_results.nf'
 
 workflow comp_and_contam_wf {
 
