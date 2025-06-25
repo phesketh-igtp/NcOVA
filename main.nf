@@ -13,7 +13,8 @@ def helpMessage() {
     Usage:
 
     Mandatory arguments:
-        --samplesheet           [CSV]   Path to input data (must be surrounded with quotes)
+        --samplesheet           [CSV]   Path to input data, must have the following columns (including the header):
+                                            sampleID,forward_path,reverse_path,species,index
         --runID                 [str]   Run identifier
         --outDir                [path]  The output directory where the results will be saved
         --workDir               [path]  The temporary work directory for intermediate files
@@ -31,6 +32,7 @@ def helpMessage() {
 workflow {
 
     def color_green  = '\u001B[32m'
+    def color_purp   = '\u001B[35m'
     def color_reset  = '\u001B[0m'
     def color_cyan   = '\u001B[36m'
 
@@ -82,16 +84,16 @@ workflow {
     */
 
     if (params.workflow == 'full') {
-        log.info "Running the full workflow for taxonomic composition and contamination analysis."
+        log.info "${color_cyan}Running the full workflow (${color_purp}--workflow full${color_cyan}) for taxonomic composition and contamination analysis.${color_reset}"
         comp_and_contam_wf(params.samplesheet)
         tuberculosis_wf(params.samplesheet)
         
     } else if (params.workflow == 'comp_and_contam') {
-        log.info "Running the single sample workflow for taxonomic composition and contamination analysis."
+        log.info "${color_cyan}Running the single sample workflow (${color_purp}--workflow comp_and_contam${color_cyan}) for taxonomic composition and contamination analysis.${color_reset}"
         comp_and_contam_wf(params.samplesheet)
         
     } else if (params.workflow == 'tuberculosis_ctrls') {
-        log.info "Running the tuberculosis controls workflow for taxonomic composition and contamination analysis."
+        log.info "${color_cyan}Running the tuberculosis controls workflow (${color_purp}--workflow tuberculosis_ctrls${color_cyan}) for taxonomic composition and contamination analysis.${color_reset}"
         tuberculosis_wf(params.samplesheet)
     }
 

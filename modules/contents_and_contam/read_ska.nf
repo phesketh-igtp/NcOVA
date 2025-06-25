@@ -26,8 +26,9 @@ process ska_reads_build {
     script:
 
         """
-        sed 's/,/\t/g' ${samplesheet} | \\
-            cut -f2,3,4 > input_sequence.txt
+        sed 's/,/\t/g' ${samplesheet} \\
+            | sed '1d' \\
+            | cut -f1,2,3 > input_sequence.txt
 
         line_count=\$(wc -l < input_sequence.txt)
 
