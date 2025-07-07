@@ -16,7 +16,7 @@ workflow tuberculosis_wf {
                 .ifEmpty { error "Sample sheet file '${samplesheet}' not found or empty" }
                 .splitCsv(header: true, sep: ',')
                 .map { row ->
-                    def requiredColumns = ['sampleID', 'forward_path', 'reverse_path', 'species', 'index']
+                    def requiredColumns = ['sampleID', 'forward_path', 'reverse_path', 'species', 'index', 'type']
                     def missingColumns = requiredColumns.findAll { !row.containsKey(it) }
                     if (missingColumns) {
                         error "Missing required column(s) in samplesheet: ${missingColumns.join(', ')}"
@@ -34,14 +34,13 @@ workflow tuberculosis_wf {
                 tuple(row.sampleID.trim(), 
                         forwardFile, 
                         reverseFile, 
-                        row.kingdom.trim(),
                         row.species.trim(),
                         row.index.trim(),
                         row.type.trim() // Added type for branching
                         )
                     }
                 .branch {
-                    mtbc: it[3] == 'control'
+                    ctrl: it[5] == 'control'
                 }
                 .set { branched_ctrls }
 
@@ -79,8 +78,6 @@ version: 1.0.0-beta
 description: 
     This is the tuberculosis controls workflow.
     This put the MTBC controls through the TBProfiler and MTBSeq pipelines.
-    It compiles the results of both pipelines into a summary file.
-    These reads should fail the two workflows, as they are controls.
 changelog
         - 2024-11-01: Initial version
 */
