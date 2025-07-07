@@ -4,7 +4,6 @@ include { tbprofiler_ctr_compile }      from '../modules/mtbcs_controls/tbprofil
 include { mtbseq_ctr_compile }          from '../modules/mtbcs_controls/mtbseq_compile/main.nf'
 include { compile_mtbc_ctrl_summary }   from '../modules/mtbcs_controls/compile_mtbc_ctrl_summary/main.nf'
 
-
 workflow tuberculosis_wf {
 
     take:
@@ -33,13 +32,13 @@ workflow tuberculosis_wf {
                 def reverseFile = file(row.reverse_path.trim(), checkIfExists: true)
                         
                 tuple(row.sampleID.trim(), 
-                    forwardFile, 
-                    reverseFile, 
-                    row.kingdom.trim(),
-                    row.species.trim(),
-                    row.index.trim(),
-                    row.type.trim() // Added type for branching
-                    )
+                        forwardFile, 
+                        reverseFile, 
+                        row.kingdom.trim(),
+                        row.species.trim(),
+                        row.index.trim(),
+                        row.type.trim() // Added type for branching
+                        )
                 }
                 .branch {
                     mtbc: it[3] == 'control'
