@@ -39,11 +39,12 @@ workflow tuberculosis_wf {
                         row.index.trim(),
                         row.type.trim() // Added type for branching
                         )
-                }
+                    }
                 .branch {
                     mtbc: it[3] == 'control'
                 }
                 .set { branched_ctrls }
+
         /*
         ······································································································
             NEGATIVE CONTROL WORKFLOW (NEGATIVE_CONTROL_WF)
@@ -54,9 +55,8 @@ workflow tuberculosis_wf {
 
         // TB profiler
             tbprofiler_ctrl( branched_ctrls)
-                
-                tbprofiler_handover_collected = tbprofiler_ctrl.out.tbprofiler_results.collect()
-                tbprofiler_ctr_compile( tbprofiler_handover_collected )
+            tbprofiler_handover_collected = tbprofiler_ctrl.out.tbprofiler_results.collect()
+            tbprofiler_ctr_compile( tbprofiler_handover_collected )
 
         // MTBSeq
             mtbseq_ctrl( branched_ctrls)
@@ -77,14 +77,10 @@ author: Poppy J Hesketh Best
 date: 2025-04-04
 version: 1.0.0-beta
 description: 
-    This is the main workflow for the RutiSeq-nf pipeline. It is designed to be run with Nextflow and 
-        takes a samplesheet as input. The workflow performs the following steps:
-            - Update the TBProfiler database
-            - Perform negative control analysis
-            - Perform single sample analysis
-            - Perform pairwise sample analysis
-            - Produce summary tables and visualisations
-            - Perform barcoding analysis (optional-WIP)
+    This is the tuberculosis controls workflow.
+    This put the MTBC controls through the TBProfiler and MTBSeq pipelines.
+    It compiles the results of both pipelines into a summary file.
+    These reads should fail the two workflows, as they are controls.
 changelog
         - 2024-11-01: Initial version
 */
