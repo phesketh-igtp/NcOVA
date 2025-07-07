@@ -40,7 +40,7 @@ workflow tuberculosis_wf {
                         )
                     }
                 .branch {
-                    ctrl: it[5] == 'control'
+                    mtbc: it[5] == 'control'
                 }
                 .set { branched_ctrls }
 

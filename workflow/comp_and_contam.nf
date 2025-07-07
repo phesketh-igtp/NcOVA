@@ -27,7 +27,7 @@ workflow comp_and_contam_wf {
         Merge results and produce internative HTML to show potential contamination
         */
             merge_results( ska_distance.out.ska_distance, 
-                            sylph_read_taxonomy.out.sylph_merged_res )
+                            sylph_classification.out.sylph_merged_res )
 
 }
 
